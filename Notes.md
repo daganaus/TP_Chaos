@@ -22,5 +22,4 @@ Obj : étudier la transition vers le chaos i.e comment le système passe de cycl
 
     c_seuil = 5 : Comportement Chaotique
 
-je fais une modif
     
