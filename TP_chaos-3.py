@@ -44,17 +44,19 @@ def Roessler(R, t, a, b, c):
 # n : vecteur normal au plan, n = (a,b,c)
 # d : position du plan
 # r1, r2 : deux points successifs de la trajectoire
+def test_intersect(r1, r2, n, d): # fonction qui teste si le segment [r1,r2] intersecte le plan
+  if np.dot(r1,n)*np.dot(r2,n) < 0 : # On regarde si r1.n et r2.n ont des signes opposés
+      return True
+  else:
+      return False
+
 def intersect(r1, r2, n, d): # fonction qui retourne le point d'intersection s'il existe
     direction = r2-r1
     denom = np.dot(direction, n)
-    if denom == 0: # vecteur direction parallèle au plan (pas d'intersection possible)
-        return
-    else:
+    if test_intersect(r1, r2, n, d): #Il existe une intersection on la calcule en résolvant n.dir = d
         t = -(np.dot(r1,n) + d)/denom
         if 0 <= t <= 1:
             return r1 + t*direction
-        else :
-            return
     
 def Poincare(R, n, d):
     P_intersect = [] # liste des points d'intersection de la trajectoire avec la section de Poincaré
@@ -62,8 +64,11 @@ def Poincare(R, n, d):
         pt = intersect(R[i], R[i+1], n, d)
         if pt is not None:
             P_intersect.append(pt)
-    print(np.array(P_intersect))
+    #print(np.array(P_intersect))
     return np.array(P_intersect)
+
+
+
         
     
 
@@ -111,7 +116,7 @@ def trace_Roessler(r0, parametres, t0, t1, npoints=N) :
   r1=r[-1]
   # On résoud de nouveau à partir de la nouvelle origine.
   _, R=solve_Roessler(r1, parametres, t1, npoints)
-  P_intersect = Poincare(R, [0,1,0], 0)
+  P_intersect = Poincare(R, [0,1,0], -1)
   X_intersect, Y_intersect, Z_intersect = P_intersect.T
   ax2D.clear()
   ax2D.plot(X_intersect, Z_intersect, '.', color='darkorange', label="Section de Poincaré (y=0)")
