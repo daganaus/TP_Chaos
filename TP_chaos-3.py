@@ -3,16 +3,16 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d 
 plt.ion()
-plt.switch_backend('Qt5Agg')
+plt.switch_backend('Qt5Agg') #'TkAgg' si Qt5Agg ne fonctionne pas
 from matplotlib.widgets import Slider, Button
 
 fig=plt.figure(figsize=(8,6))
 ax=fig.add_subplot(projection='3d')
 # Avec une ancienne version de matplotlib, remplacer la ligne ci-dessus par
 #ax=fig.gca(projection='3d')
-ax.set_position([0, 0.15, 1, 0.8])
+ax.set_position([0, 0.18, 1, 0.8])
 
-fig2, ax2D = plt.subplots()
+
  
 # PARAMÈTRES 
 # Nombre de points calculés
@@ -45,7 +45,7 @@ def Roessler(R, t, a, b, c):
 # d : position du plan
 # r1, r2 : deux points successifs de la trajectoire
 def test_intersect(r1, r2, n, d): # fonction qui teste si le segment [r1,r2] intersecte le plan
-  if np.dot(r1,n)*np.dot(r2,n) < 0 : # On regarde si r1.n et r2.n ont des signes opposés
+  if np.dot(r1,n) <0 and np.dot(r2,n) > 0 : # On regarde si r1.n et r2.n ont des signes opposés
       return True
   else:
       return False
@@ -67,6 +67,33 @@ def Poincare(R, n, d):
     #print(np.array(P_intersect))
     return np.array(P_intersect)
 
+def restriction_y(P_intersect):
+    """Foncion qui retourne X = {y_0, y_1,...,Y_N-1} et Y = {y_1, y_1,...,y_N}"""
+    X = []
+    Y = []
+    for i in range(len(P_intersect)-2):
+      #if P_intersect[i][1] > 0 and P_intersect[i+2][1] > 0:
+        X.append(P_intersect[i][1])
+        Y.append(P_intersect[i+1][1])
+    # Normalisation par le maximum
+    #max_y = max(Y) if Y else 1  # Évite la division par zéro si Y est vide
+    #X = [x / max_y for x in X]
+    #Y = [y / max_y for y in Y]
+    return np.array(X), np.array(Y)
+
+def restriction_x(P_intersect):
+    """Foncion qui retourne X = {x_0, x_1,...,Y_N-1} et Y = {x_1, x_1,...,x_N}"""
+    X = []
+    Y = []
+    for i in range(len(P_intersect)-2):
+      #if P_intersect[i][0] > 0 and P_intersect[i+2][0] > 0:
+        X.append(P_intersect[i][0])
+        Y.append(P_intersect[i+1][1])
+    # Normalisation par le maximum
+    #max_y = max(Y) if Y else 1  # Évite la division par zéro si Y est vide
+    #X = [x / max_y for x in X]
+    #Y = [y / max_y for y in Y]
+    return np.array(X), np.array(Y)
 
 
         
@@ -116,14 +143,38 @@ def trace_Roessler(r0, parametres, t0, t1, npoints=N) :
   r1=r[-1]
   # On résoud de nouveau à partir de la nouvelle origine.
   _, R=solve_Roessler(r1, parametres, t1, npoints)
-  P_intersect = Poincare(R, [0,1,0], -1)
+  # On calcul la section de Poincaré
+  P_intersect = Poincare(R, [0,1,0], 0)
   X_intersect, Y_intersect, Z_intersect = P_intersect.T
+  # On trace la section de Poincaré
   ax2D.clear()
   ax2D.plot(X_intersect, Z_intersect, '.', color='darkorange', label="Section de Poincaré (y=0)")
   ax2D.set_xlabel("x")
   ax2D.set_ylabel("z")
   ax2D.set_title("Section de Poincaré 2D")
   ax2D.legend()
+  
+  #On Calcul les restriction selon x et y positifs
+  restx_X, restx_Y = restriction_x(P_intersect)
+  #resty_X, resty_Y = restriction_y(P_intersect)
+
+  #On trace les restrictions
+
+  ax2.clear()
+  ax2.plot(restx_X, restx_Y, '.', color='darkorange', label=" ")
+  ax2.set_xlabel("x")
+  ax2.set_ylabel("y")
+  ax2.set_title("Restriction selon x positif")
+  ax2.legend()
+
+  #ax3.clear()
+  #ax3.plot(resty_X, resty_Y, '.', color='darkorange', label=" ")
+  #ax3.set_xlabel("x")
+  #ax3.set_ylabel("z")
+  #ax3.set_title("Restriction selon y positif")
+  #ax3.legend()
+
+
   # R.T est la transposée de R, donc R.T[j,i] est la coordonnée j au temps i.
   # Ainsi R.T[0] est le vecteur des valeur de la coordonnée 0 (soit x)
   # à tous les temps i.
@@ -173,7 +224,7 @@ axe_c = plt.axes([0.1, 0.07, 0.65, 0.04])
 # On crée ensuite un widget de type slider avec le rectangle défini axe_c.
 # Les valeurs de la barre vont de 1 (à gauche) à 15 (à droite).
 # Le nom indiqué à gauche de la barre est 'c' et sa valeur initiale est c0.
-barre_c= Slider(ax=axe_c, label='c', valmin=2, valmax=5, valinit=c0, track_color='darkgreen')
+barre_c= Slider(ax=axe_c, label='c', valmin=3, valmax=8, valinit=c0, track_color='darkgreen')
 
 # Dessin de la barre de glissement pour les paramètres de temps (t0 et t1)
 axe_t0 = plt.axes([0.1, 0.01, 0.25, 0.03])
@@ -203,6 +254,9 @@ barre_t1.on_changed(update)
 barre_N.on_changed(update)
 bouton_raz.on_clicked(reset)
 bouton_fin.on_clicked(quitter)
+fig2, ax2D = plt.subplots()
+fig3, ax2 = plt.subplots()
+fig4, ax3 = plt.subplots()
 update(0)
 
 plt.show(block=True)
