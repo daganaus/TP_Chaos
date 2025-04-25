@@ -64,7 +64,7 @@ def Poincare(R, n, d):
         pt = intersect(R[i], R[i+1], n, d)
         if pt is not None:
             P_intersect.append(pt)
-    #print(np.array(P_intersect))
+    print(np.array(P_intersect))
     return np.array(P_intersect)
 
 def restriction_y(P_intersect):
@@ -95,6 +95,9 @@ def restriction_x(P_intersect):
     #Y = [y / max_y for y in Y]
     return np.array(X), np.array(Y)
 
+def appPoincaré_x(P_intersect):
+    """Foncion qui retourne de tableaux : X = {x_0, x_1,...,Y_N-1} et Y = {x_1, x_1,...,x_N}"""
+    return P_intersect[:-1, 0], P_intersect[1:, 0]
 
         
     
@@ -155,7 +158,9 @@ def trace_Roessler(r0, parametres, t0, t1, npoints=N) :
   ax2D.legend()
   
   #On Calcul les restriction selon x et y positifs
-  restx_X, restx_Y = restriction_x(P_intersect)
+  restx_X, restx_Y = appPoincaré_x(P_intersect)
+  print("restx_X", restx_X)
+  print("restx_Y", restx_Y)
   #resty_X, resty_Y = restriction_y(P_intersect)
 
   #On trace les restrictions
